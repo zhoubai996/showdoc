@@ -11,9 +11,15 @@ const request = (
   data = {},
   method = 'post',
   msgAlert = true,
-  contentType = 'form'
+  contentType = 'form',
+  isPush = false
 ) => {
-  let url = DocConfig.server + path
+  let url = ''
+  if (isPush === true) {
+    url = path
+  } else {
+    url = DocConfig.server + path
+  }
 
   const userinfostr = localStorage.getItem('userinfo')
   if (userinfostr) {
@@ -22,13 +28,22 @@ const request = (
       data.user_token = userinfo.user_token
     }
   }
-
-  let axiosConfig = {
-    url: url,
-    method: method,
-    data: new URLSearchParams(data),
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded'
+  // TODO: 根据isPUsh更改axiosConfig内容
+  let axiosConfig = {}
+  if (isPush === true) {
+    axiosConfig = {
+      url: url,
+      method: method,
+      params: data
+    }
+  } else {
+    axiosConfig = {
+      url: url,
+      method: method,
+      data: new URLSearchParams(data),
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
     }
   }
 
@@ -41,7 +56,7 @@ const request = (
     axios(axiosConfig)
       .then(
         response => {
-          //超时登录
+          // 超时登录
           if (
             response.data.error_code === 10102 &&
             response.config.data.indexOf('redirect_login=false') === -1
@@ -61,7 +76,7 @@ const request = (
             MessageBox.alert(response.data.error_message)
             return reject(new Error('业务级别的错误'))
           }
-          //上面没有return的话，最后返回这个
+          // 上面没有return的话，最后返回这个
           resolve(response.data)
         },
         err => {

@@ -299,8 +299,10 @@
             })
           }
         }
-      "
-      ref="Notify"
+      " 
+      :getToken="getToken"
+      ref="Notify" 
+      @pushContent="getPushContent"
     ></Notify>
 
     <SelectCat
@@ -365,7 +367,6 @@ import { Base64 } from 'js-base64'
 import { rederPageContent } from '@/models/page'
 import { getUserInfoFromStorage } from '@/models/user.js'
 import AI from '@/components/page/edit/AI'
-
 import {
   apiTemplateZh,
   databaseTemplateZh,
@@ -413,7 +414,10 @@ export default {
       showContent: false,
       showMock: false,
       showAI: false,
-      showAIBtn: false
+      showAIBtn: false,
+      wechat_push: false, // 是否开启微信推送
+      token: '', // 消息推送服务token
+      getToken: ''
     }
   },
   components: {
@@ -431,7 +435,23 @@ export default {
     Mock,
     AI
   },
+
   methods: {
+    // TODO:接收子组件传递过来的token
+    getPushContent(val) {
+      this.wechat_push = val.wechat_push
+      if (val.token !== '') {
+        this.token = val.token
+        localStorage.setItem('token', val.token)
+      } else {
+        if (localStorage.getItem('token') !== null && localStorage.getItem('token') !== '' ) {
+          this.token = localStorage.getItem('token')
+        } else {
+          this.token = val.token
+        }
+      }
+
+    },
     // 获取页面内容
     getPageContent(page_id) {
       if (!page_id) {
@@ -579,64 +599,92 @@ export default {
 
       var item_id = that.item_id
       var page_id = that.page_id
-
-      this.request(
-        '/api/page/save',
-        {
-          page_id: page_id,
-          item_id: item_id,
-          page_title: that.title,
-          page_content: encodeURIComponent(content),
-          is_urlencode: 1,
-          cat_id: cat_id,
-          is_notify: this.is_notify,
-          notify_content: this.notify_content
-        },
-        'post',
-        false
-      ).then(data => {
-        loading.close()
-        that.saving = false
-        if (data.error_code === 0) {
-          if (typeof callback == 'function') {
-            callback()
-          } else {
-            that.$message({
-              showClose: true,
-              message: '保存成功',
-              type: 'success'
-            })
-          }
-
-          // 删除草稿
-          that.deleteDraft()
-          if (that.page_id <= 0) {
-            that.page_id = data.data.page_id
-            // 更改url
-            that.$router.replace({
-              path: '/' + that.item_id + '/' + that.page_id
-            })
-          }
-        } else if (data.error_code === 10250) {
-          // 删除草稿
-          that.deleteDraft()
-          that.$alert(
-            '内容已保存。检测到你的账户尚未绑定邮箱或者邮箱还没有经过验证。当忘记密码的时候，你将面临着<font color="red">丢失数据</font>的风险。<a href="/user/setting" target="_blank">点此绑定邮箱</a>，忘记密码时可通过邮箱重置密码',
-            '提示',
+      // TODO:微信推送
+      var urlPush = 'https://push.showdoc.com.cn/server/api/push/' + this.token
+        if (this.wechat_push == true) {     
+          this.request(
+            urlPush,
             {
-              dangerouslyUseHTMLString: true
+              title: '笔记更改通知',
+              content: this.notify_content
+            },
+            'get',
+            false,
+            'form',
+            true
+          ).then(data => {
+            if (data.error_code === 0 && data.error_message === 'ok') {
+              that.$message({
+                showClose: true,
+                message: '推送成功',
+                type: 'success'
+              })
+            } else {
+              that.$message({
+                showClose: true,
+                message: '推送失败',
+                type: 'error'
+              })
             }
-          )
-        } else {
-          that.$alert(data.error_message)
+          })
         }
-      })
+        this.request(
+          '/api/page/save',
+          {
+            page_id: page_id,
+            item_id: item_id,
+            page_title: that.title,
+            page_content: encodeURIComponent(content),
+            is_urlencode: 1,
+            cat_id: cat_id,
+            is_notify: this.is_notify,
+            notify_content: this.notify_content
+          },
+          'post',
+          false
+        ).then(data => {
+          loading.close()
+          that.saving = false
+          if (data.error_code === 0) {
+            if (typeof callback == 'function') {
+              callback()
+            } else {
+              that.$message({
+                showClose: true,
+                message: '保存成功',
+                type: 'success'
+              })
+            }
 
-      // 设置一个最长关闭时间
-      setTimeout(() => {
-        loading.close()
-        that.saving = false
-      }, 10000)
+            // 删除草稿
+            that.deleteDraft()
+            if (that.page_id <= 0) {
+              that.page_id = data.data.page_id
+              // 更改url
+              that.$router.replace({
+                path: '/' + that.item_id + '/' + that.page_id
+              })
+            }
+          } else if (data.error_code === 10250) {
+            // 删除草稿
+            that.deleteDraft()
+            that.$alert(
+              '内容已保存。检测到你的账户尚未绑定邮箱或者邮箱还没有经过验证。当忘记密码的时候，你将面临着<font color="red">丢失数据</font>的风险。<a href="/user/setting" target="_blank">点此绑定邮箱</a>，忘记密码时可通过邮箱重置密码',
+              '提示',
+              {
+                dangerouslyUseHTMLString: true
+              }
+            )
+          } else {
+            that.$alert(data.error_message)
+          }
+        })
+
+        // 设置一个最长关闭时间
+        setTimeout(() => {
+          loading.close()
+          that.saving = false
+        }, 10000)
     },
     goback() {
       var url = '/' + this.item_id + '/' + this.page_id
@@ -928,6 +976,13 @@ export default {
   },
 
   mounted() {
+    let token = localStorage.getItem('token')
+    if (token !== null && token !== '') {
+      this.getToken = localStorage.getItem('token')
+    } else {
+      localStorage.removeItem('token')
+      this.getToken = ''
+    }
     this.page_id = this.edit_page_id
     if (this.copy_page_id > 0) {
       this.getPageContent(this.copy_page_id)
