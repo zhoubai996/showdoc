@@ -56,6 +56,9 @@
             >&nbsp;&nbsp;&nbsp;
             <a :href="oauth2_url">{{ oauth2_entrance_tips }}</a>
           </el-form-item>
+          <div class="copyright">
+            <a href="https://beian.miit.gov.cn/">{{ beian }}</a>
+          </div>   
         </el-form>
       </el-card>
     </el-container>
@@ -78,10 +81,20 @@ export default {
       oauth2_entrance_tips: '',
       oauth2_url: DocConfig.server + '/api/ExtLogin/oauth2',
       captchaId: 0,
-      captcha: ''
+      captcha: '',
+      beian: ''
     }
   },
   methods: {
+    // TODO:获取备案号码
+    getBeianNum() {
+      var url = DocConfig.server + '/api/common/homePageSetting'
+      this.axios.post(url, this.form).then(response => {
+        if (response.data.error_code === 0) {
+          this.beian = response.data.data.beian
+        }
+      })
+    },
     onSubmit() {
       if (this.is_show_alert) {
         return
@@ -187,6 +200,7 @@ export default {
     }
   },
   mounted() {
+    this.getBeianNum()
     var that = this
     // 对redirect参数进行校验，以防止钓鱼跳转
     if (this.$route.query.redirect) {

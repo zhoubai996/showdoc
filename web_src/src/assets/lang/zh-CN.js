@@ -563,5 +563,9 @@ exports.default = {
   do_not_remind_again: '知道了,不用再提醒我',
   no_items: '暂无项目',
 
-  ai_assistant: 'AI助手生成'
+  ai_assistant: 'AI助手生成',
+  is_wx_push: '是否微信公众号推送',
+  push_service_request: '推送服务申请',
+  input_token: '请输入token',
+  remove_token: '清除token'
 }

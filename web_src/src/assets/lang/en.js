@@ -592,5 +592,9 @@ exports.default = {
   do_not_remind_again: 'Don not remind me again',
   no_items: 'No items',
 
-  ai_assistant: 'Ai assistant'
+  ai_assistant: 'Ai assistant',
+  is_wx_push: 'Whether to push wechat public account',
+  push_service_request: 'Push service request',
+  input_token: 'Please enter token',
+  remove_token: 'Clearing token'
 }

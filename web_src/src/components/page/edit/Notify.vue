@@ -18,12 +18,12 @@
     >
       <div>
         <!-- 是否启用微信消息推送 -->
-        <el-checkbox v-model="checked">是否微信公众号推送</el-checkbox>
-        <el-link type="success" href="https://push.showdoc.com.cn/" target="_blank">推送服务申请</el-link>
+        <el-checkbox v-model="checked">{{ $t('is_wx_push') }}</el-checkbox>
+        <el-link type="success" href="https://push.showdoc.com.cn/" target="_blank">{{ $t('push_service_request') }}</el-link>
         <div style="margin: 15px 0;">
           <el-row>
-            <el-col :span="19"><el-input v-model="token" placeholder="请输入token"></el-input></el-col>
-            <el-col :span="5"><el-button type="danger" plain @click="removeToken">清除token</el-button></el-col>
+            <el-col :span="19"><el-input v-model="token" :placeholder="$t('input_token')"></el-input></el-col>
+            <el-col :span="5"><el-button type="danger" plain @click="removeToken">{{ $t('remove_token') }}</el-button></el-col>
           </el-row>
         </div>
         <el-input
